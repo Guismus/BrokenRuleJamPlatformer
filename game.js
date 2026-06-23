@@ -967,7 +967,7 @@ class Game {
     this.state = 'LEVEL_COMPLETE';
     this.hideAllOverlays();
     
-    const levelMs = performance.now() - this.levelStartTimeStamp;
+    const levelMs = this.levelClearTime || 0;
     const minutes = Math.floor(levelMs / 60000).toString().padStart(2, '0');
     const seconds = Math.floor((levelMs % 60000) / 1000).toString().padStart(2, '0');
     const tenths = Math.floor((levelMs % 1000) / 100);
@@ -1128,7 +1128,9 @@ class Game {
           }
           
           else if (cell === 'V') {
+            if (this.state === 'LEVEL_COMPLETE') return;
             this.state = 'LEVEL_COMPLETE';
+            this.levelClearTime = performance.now() - this.levelStartTimeStamp;
             audio.playWin();
             
             const portalCenterX = tx + this.tileSize / 2;
@@ -1247,8 +1249,11 @@ class Game {
       return;
     }
     
-    this.updatePhysics();
-    this.updateEntities();
+    if (this.state === 'PLAYING') {
+      this.updatePhysics();
+      this.updateEntities();
+    }
+    
     this.particles.update();
     
     // Gold Star vortex dust emitter
