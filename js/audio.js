@@ -10,6 +10,32 @@ class AudioEngine {
   constructor() {
     this.ctx = null;
     this.muted = false;
+
+    // Music System (Chiptune Synthesizer)
+    this.musicPlaying = false;
+    this.musicEnabled = false;
+    this.tempo = 130.0; // BPM
+    this.lookahead = 25.0; // ms
+    this.scheduleAheadTime = 0.1; // seconds
+    this.nextNoteTime = 0.0;
+    this.currentNoteIndex = 0;
+    this.schedulerTimer = null;
+
+    // 32-step arpeggiated retro melody (16th notes)
+    this.melodyPattern = [
+      60, 64, 67, 72, 71, 67, 64, 67, // C E G C5 B G E G
+      62, 66, 69, 74, 72, 69, 66, 69, // D F# A D5 C5 A F# A
+      60, 64, 67, 72, 71, 67, 64, 67, // C E G C5 B G E G
+      55, 59, 62, 67, 71, 67, 62, 59  // G3 B3 D4 G4 B4 G4 D4 B3
+    ];
+
+    // 32-step retro walking bassline (8th notes / 16th notes layout)
+    this.bassPattern = [
+      48, 48, 55, 48, 48, 55, 48, 55, // C3 C3 G3 C3 C3 G3 C3 G3
+      50, 50, 57, 50, 50, 57, 50, 57, // D3 D3 A3 D3 D3 A3 D3 A3
+      48, 48, 55, 48, 48, 55, 48, 55, // C3 C3 G3 C3 C3 G3 C3 G3
+      43, 43, 50, 43, 43, 50, 43, 50  // G2 G2 D3 G2 G2 D3 G2 D3
+    ];
   }
 
   init() {
@@ -33,6 +59,7 @@ class AudioEngine {
           <line x1="17" y1="9" x2="23" y2="15"></line>
         </svg>
       `;
+      this.pauseMusic();
     } else {
       toggleEl.classList.remove('muted');
       toggleEl.innerHTML = `
@@ -42,8 +69,109 @@ class AudioEngine {
         </svg>
       `;
       this.init();
+      this.resumeMusic();
     }
     return this.muted;
+  }
+
+  midiToFreq(note) {
+    if (!note || note === 0) return 0;
+    return 440 * Math.pow(2, (note - 69) / 12);
+  }
+
+  startMusic() {
+    this.musicEnabled = true;
+    if (this.muted || this.musicPlaying) return;
+    this.init();
+
+    this.musicPlaying = true;
+    this.nextNoteTime = this.ctx.currentTime;
+    this.currentNoteIndex = 0;
+
+    this.schedulerTimer = setInterval(() => {
+      this.scheduler();
+    }, this.lookahead);
+  }
+
+  stopMusic() {
+    this.musicEnabled = false;
+    this.musicPlaying = false;
+    if (this.schedulerTimer) {
+      clearInterval(this.schedulerTimer);
+      this.schedulerTimer = null;
+    }
+  }
+
+  pauseMusic() {
+    this.musicPlaying = false;
+    if (this.schedulerTimer) {
+      clearInterval(this.schedulerTimer);
+      this.schedulerTimer = null;
+    }
+  }
+
+  resumeMusic() {
+    if (this.musicEnabled && !this.muted && !this.musicPlaying) {
+      this.init();
+      this.musicPlaying = true;
+      this.nextNoteTime = this.ctx.currentTime;
+      this.schedulerTimer = setInterval(() => {
+        this.scheduler();
+      }, this.lookahead);
+    }
+  }
+
+  scheduler() {
+    while (this.nextNoteTime < this.ctx.currentTime + this.scheduleAheadTime) {
+      this.scheduleNote(this.currentNoteIndex, this.nextNoteTime);
+      this.nextNote();
+    }
+  }
+
+  nextNote() {
+    const secondsPerBeat = 60.0 / this.tempo;
+    this.nextNoteTime += 0.25 * secondsPerBeat; // Add a 16th note duration
+    this.currentNoteIndex++;
+  }
+
+  scheduleNote(stepNumber, time) {
+    const melodyNote = this.melodyPattern[stepNumber % this.melodyPattern.length];
+    const bassNote = this.bassPattern[stepNumber % this.bassPattern.length];
+    const stepDuration = 60.0 / this.tempo / 4;
+
+    // Melody synth (Square wave)
+    if (melodyNote > 0) {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(this.midiToFreq(melodyNote), time);
+
+      gain.gain.setValueAtTime(0.022, time); // Soft pleasant volume
+      gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 0.9);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + stepDuration);
+    }
+
+    // Bass synth (Triangle wave)
+    if (bassNote > 0) {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(this.midiToFreq(bassNote), time);
+
+      gain.gain.setValueAtTime(0.045, time); // Soft bass volume
+      gain.gain.exponentialRampToValueAtTime(0.001, time + stepDuration * 0.95);
+
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(time);
+      osc.stop(time + stepDuration);
+    }
   }
 
   // Bubble spray / FLUDD recoil launch

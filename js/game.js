@@ -154,6 +154,7 @@ class Game {
     this.state = 'START_MENU';
     this.hideAllOverlays();
     document.getElementById('start-menu').classList.remove('hidden');
+    audio.stopMusic();
   }
 
   showLevelSelect() {
@@ -185,9 +186,11 @@ class Game {
     if (this.state === 'PLAYING') {
       this.state = 'PAUSED';
       document.getElementById('pause-menu').classList.remove('hidden');
+      audio.pauseMusic();
     } else if (this.state === 'PAUSED') {
       this.state = 'PLAYING';
       document.getElementById('pause-menu').classList.add('hidden');
+      audio.resumeMusic();
     }
   }
 
@@ -204,6 +207,9 @@ class Game {
     this.hideAllOverlays();
     this.particles.clear();
     this.state = 'PLAYING';
+    
+    // Start background music
+    audio.startMusic();
     
     const levelData = LEVELS[index];
     this.levelStartTimeStamp = performance.now();
@@ -326,6 +332,7 @@ class Game {
   triggerDeath(manual = false) {
     if (!this.player.alive) return;
     this.player.alive = false;
+    audio.stopMusic();
     
     if (!manual) {
       this.deathCount++;
@@ -518,6 +525,7 @@ class Game {
             if (this.state === 'LEVEL_COMPLETE') return;
             this.state = 'LEVEL_COMPLETE';
             this.levelClearTime = performance.now() - this.levelStartTimeStamp;
+            audio.stopMusic();
             audio.playWin();
             
             const portalCenterX = tx + this.tileSize / 2;
