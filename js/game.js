@@ -74,6 +74,11 @@ class Game {
     this.initEventListeners();
     this.setupMenus();
     this.resizeGame();
+
+    // Delayed resize adjustments to capture correct iframe size in itch.io
+    setTimeout(() => this.resizeGame(), 100);
+    setTimeout(() => this.resizeGame(), 300);
+    setTimeout(() => this.resizeGame(), 1000);
   }
 
   initEventListeners() {
@@ -122,11 +127,21 @@ class Game {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
+    if (windowWidth <= 0 || windowHeight <= 0) {
+      wrapper.style.transform = 'translate(-50%, -50%) scale(1)';
+      return;
+    }
+    
     const scaleX = windowWidth / targetWidth;
     const scaleY = windowHeight / targetHeight;
-    const scale = Math.min(scaleX, scaleY);
+    let scale = Math.min(scaleX, scaleY);
     
-    wrapper.style.transform = `scale(${scale})`;
+    // Guard against invalid or 0 scale (which makes game tiny/invisible)
+    if (isNaN(scale) || scale <= 0.05) {
+      scale = 1;
+    }
+    
+    wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
   }
 
   setupMenus() {

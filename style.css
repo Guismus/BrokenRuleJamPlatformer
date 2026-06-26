@@ -42,7 +42,10 @@ body {
 
 /* Outer Game Wrapper */
 #game-wrapper {
-  position: relative;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
   width: 900px;
   height: 600px;
   background: var(--sky-blue);
@@ -147,6 +150,7 @@ body {
 .modal-overlay.hidden {
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
 }
 
 /* Titles styled like classic titles */
