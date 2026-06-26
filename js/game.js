@@ -123,7 +123,7 @@ class Game {
       window.focus();
     }, { once: true });
 
-    document.getElementById('sound-toggle').addEventListener('click', () => {
+    document.getElementById('sound-toggle').addEventListener('pointerup', () => {
       audio.toggleMute();
     });
 
@@ -167,34 +167,36 @@ class Game {
   }
 
   setupMenus() {
-    document.getElementById('btn-start-game').onclick = () => {
+    // Use 'pointerup' instead of 'click' for itch.io iframe compatibility.
+    // 'click' requires mousedown+mouseup, but mousedown doesn't propagate in itch.io iframes.
+    document.getElementById('btn-start-game').addEventListener('pointerup', () => {
       audio.init();
       this.startLevel(0);
-    };
+    });
 
-    document.getElementById('btn-select-levels').onclick = () => {
+    document.getElementById('btn-select-levels').addEventListener('pointerup', () => {
       audio.init();
       this.showLevelSelect();
-    };
+    });
 
-    document.getElementById('btn-back-to-menu').onclick = () => {
+    document.getElementById('btn-back-to-menu').addEventListener('pointerup', () => {
       this.showStartMenu();
-    };
+    });
 
-    document.getElementById('btn-resume').onclick = () => {
+    document.getElementById('btn-resume').addEventListener('pointerup', () => {
       this.togglePause();
-    };
+    });
 
-    document.getElementById('btn-restart-level').onclick = () => {
+    document.getElementById('btn-restart-level').addEventListener('pointerup', () => {
       this.togglePause();
       this.loadLevel(this.currentLevelIndex);
-    };
+    });
 
-    document.getElementById('btn-quit-to-menu').onclick = () => {
+    document.getElementById('btn-quit-to-menu').addEventListener('pointerup', () => {
       this.showStartMenu();
-    };
+    });
 
-    document.getElementById('btn-victory-next').onclick = () => {
+    document.getElementById('btn-victory-next').addEventListener('pointerup', () => {
       if (this.currentLevelIndex + 1 < LEVELS.length) {
         this.currentLevelIndex++;
         this.loadLevel(this.currentLevelIndex);
@@ -202,11 +204,11 @@ class Game {
         // Replay game
         this.startLevel(0);
       }
-    };
+    });
 
-    document.getElementById('btn-victory-menu').onclick = () => {
+    document.getElementById('btn-victory-menu').addEventListener('pointerup', () => {
       this.showStartMenu();
-    };
+    });
   }
 
   showStartMenu() {
@@ -227,9 +229,9 @@ class Game {
       const btn = document.createElement('button');
       btn.className = 'level-btn';
       btn.textContent = `1-${idx + 1}`;
-      btn.onclick = () => {
+      btn.addEventListener('pointerup', () => {
         this.startLevel(idx);
-      };
+      });
       container.appendChild(btn);
     });
     
