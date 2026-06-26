@@ -100,17 +100,28 @@ class Game {
       this.keys[e.key] = false;
     });
 
-    this.canvas.addEventListener('mousemove', (e) => {
+    // Use pointer events instead of mouse events for better iframe (itch.io) compatibility
+    this.canvas.addEventListener('pointermove', (e) => {
       const rect = this.canvas.getBoundingClientRect();
       this.mouse.x = (e.clientX - rect.left) * (this.width / rect.width);
       this.mouse.y = (e.clientY - rect.top) * (this.height / rect.height);
     });
 
-    this.canvas.addEventListener('mousedown', (e) => {
+    this.canvas.addEventListener('pointerdown', (e) => {
       if (this.state === 'PLAYING' && e.button === 0) {
         this.shootRecoil();
       }
     });
+
+    // Prevent right-click context menu on canvas (interferes in iframes)
+    this.canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+    });
+
+    // Ensure the iframe/window captures focus on first interaction
+    window.addEventListener('pointerdown', () => {
+      window.focus();
+    }, { once: true });
 
     document.getElementById('sound-toggle').addEventListener('click', () => {
       audio.toggleMute();
