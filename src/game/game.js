@@ -77,7 +77,6 @@ export class Game {
     this.RECOIL_FORCE = 11.2;
     
     this.initEventListeners();
-    this.setupMenus();
     this.lastScale = 1;
     this.resizeGame();
 
@@ -127,10 +126,6 @@ export class Game {
     window.addEventListener('pointerdown', () => {
       window.focus();
     }, { once: true });
-
-    document.getElementById('sound-toggle').addEventListener('pointerup', () => {
-      audio.toggleMute();
-    });
 
     window.addEventListener('resize', () => {
       this.resizeGame();
