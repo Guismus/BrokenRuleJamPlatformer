@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SUPER RECOIL PLUMBER | Broken Rules Jam</title>
+  <!-- Google Fonts for retro pixel styling & rounded font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Press+Start+2P&display=swap" rel="stylesheet">
+  <!-- Link stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="game-wrapper">
+    <!-- Game Canvas -->
+    <canvas id="game-canvas" width="900" height="600"></canvas>
+
+    <!-- HUD Overlay (Head Up Display) -->
+    <div id="hud">
+      <div class="hud-item" id="level-display-container">
+        STAGE <span id="level-num">1-1</span>
+      </div>
+      
+      <!-- Water Tank capacity -->
+      <div class="hud-item">
+        WATER
+        <div id="energy-display">
+          <div class="energy-cell active" data-cell="1"></div>
+          <div class="energy-cell active" data-cell="2"></div>
+          <div class="energy-cell active" data-cell="3"></div>
+        </div>
+      </div>
+      
+      <div class="hud-item" style="gap: 15px;">
+        <div>DEATHS:<span id="death-count">0</span></div>
+        <div>TIME:<span id="time-elapsed">00:00.0</span></div>
+      </div>
+    </div>
+
+    <!-- Quick Level Tutorial/Hint -->
+    <div id="level-hint">Aim with Mouse. Left-click to spray water recoil.</div>
+
+    <!-- 1. Start Menu Overlay -->
+    <div id="start-menu" class="modal-overlay">
+      <h1 class="glitch-title">SUPER RECOIL PLUMBER</h1>
+      <div class="subtitle">FLUDD RECOIL SIMULATION</div>
+      
+      <div class="info-card">
+        <h3>💥 THE BROKEN RULE</h3>
+        <p>
+          Your boots are stuck! You have <strong>no controls to walk</strong>, and <strong>no jump button</strong>.
+          Ground friction holds you completely static.
+        </p>
+        <p>
+          <strong>Move using your water pump recoil!</strong> Aim with your mouse and click to spray a high-pressure jet that launches you in the opposite direction.
+        </p>
+        
+        <h3>🎮 CONTROLS</h3>
+        <div class="controls-grid">
+          <div><span class="key-cap">Mouse</span></div>
+          <div>Aim water nozzle</div>
+          <div><span class="key-cap">Left Click</span></div>
+          <div>Spray water blast (costs 1 Water cell)</div>
+          <div><span class="key-cap">R</span></div>
+          <div>Instant manual restart (if stuck)</div>
+          <div><span class="key-cap">ESC</span> / <span class="key-cap">P</span></div>
+          <div>Pause game</div>
+        </div>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-cyber" id="btn-start-game">Start Game</button>
+        <button class="btn-cyber magenta" id="btn-select-levels">Select Stage</button>
+      </div>
+    </div>
+
+    <!-- 2. Level Select Overlay -->
+    <div id="level-select-menu" class="modal-overlay hidden">
+      <h1 class="glitch-title">SELECT STAGE</h1>
+      <div class="subtitle">Choose a simulation sector</div>
+
+      <div class="level-grid" id="level-grid-container">
+        <!-- Generated dynamically via JS -->
+      </div>
+
+      <button class="btn-cyber magenta" id="btn-back-to-menu">Back to Menu</button>
+    </div>
+
+    <!-- 3. Pause Menu Overlay -->
+    <div id="pause-menu" class="modal-overlay hidden">
+      <h1 class="glitch-title">PAUSED</h1>
+      <div class="subtitle">Simulation suspended</div>
+      
+      <div class="btn-group">
+        <button class="btn-cyber" id="btn-resume">Resume</button>
+        <button class="btn-cyber magenta" id="btn-restart-level">Restart</button>
+        <button class="btn-cyber" style="background:#858585; border-color:#000;" id="btn-quit-to-menu">Quit</button>
+      </div>
+      <div class="pulse-text">Press ESC or P to Resume</div>
+    </div>
+
+    <!-- 4. Game Over Overlay -->
+    <div id="game-over-menu" class="modal-overlay hidden">
+      <h1 class="glitch-title" style="color: var(--mario-red); text-shadow: 4px 4px 0px #000;">TOO BAD!</h1>
+      <div class="subtitle">Plumber restored</div>
+      
+      <div class="pulse-text">Respawning...</div>
+    </div>
+
+    <!-- 5. Victory Screen Overlay -->
+    <div id="victory-menu" class="modal-overlay hidden">
+      <h1 class="glitch-title">COURSE CLEAR!</h1>
+      <div class="subtitle" style="color: var(--luigi-green); text-shadow: 3px 3px 0px #000;">You Saved the Day!</div>
+
+      <div class="info-card" style="text-align: center;">
+        <h3>🏆 PLUMBER RECORDS</h3>
+        <div class="victory-stats">
+          <div class="stat-box">
+            <div class="stat-label">Total Time</div>
+            <div class="stat-value cyan" id="final-time">00:00.0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Fatalities</div>
+            <div class="stat-value magenta" id="final-deaths">0</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Rank</div>
+            <div class="stat-value green" id="final-rank">S</div>
+          </div>
+        </div>
+        <p>Walking is overrated. Water power is the future!</p>
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-cyber" id="btn-victory-next">Next Stage</button>
+        <button class="btn-cyber magenta" id="btn-victory-menu">Main Menu</button>
+      </div>
+    </div>
+
+    <!-- Sound Toggle -->
+    <div id="sound-toggle" title="Toggle Sound FX">
+      <svg id="sound-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Game logic scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
