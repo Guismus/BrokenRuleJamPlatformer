@@ -73,12 +73,16 @@ class Game {
     
     this.initEventListeners();
     this.setupMenus();
+    this.lastScale = 1;
     this.resizeGame();
 
     // Delayed resize adjustments to capture correct iframe size in itch.io
     setTimeout(() => this.resizeGame(), 100);
     setTimeout(() => this.resizeGame(), 300);
     setTimeout(() => this.resizeGame(), 1000);
+
+    // Periodic scaling check to adapt to iframe size changes without window resize events
+    setInterval(() => this.resizeGame(), 500);
   }
 
   initEventListeners() {
@@ -128,7 +132,10 @@ class Game {
     const windowHeight = window.innerHeight;
     
     if (windowWidth <= 0 || windowHeight <= 0) {
-      wrapper.style.transform = 'translate(-50%, -50%) scale(1)';
+      if (this.lastScale !== 1) {
+        wrapper.style.transform = 'translate(-50%, -50%) scale(1)';
+        this.lastScale = 1;
+      }
       return;
     }
     
@@ -137,11 +144,15 @@ class Game {
     let scale = Math.min(scaleX, scaleY);
     
     // Guard against invalid or 0 scale (which makes game tiny/invisible)
-    if (isNaN(scale) || scale <= 0.05) {
+    // Set a safe minimum scale of 0.25 on initial load
+    if (isNaN(scale) || scale <= 0.25) {
       scale = 1;
     }
     
-    wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    if (scale !== this.lastScale) {
+      wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+      this.lastScale = scale;
+    }
   }
 
   setupMenus() {
