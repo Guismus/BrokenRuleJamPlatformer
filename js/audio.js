@@ -39,11 +39,16 @@ class AudioEngine {
   }
 
   init() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+    try {
+      if (!this.ctx) {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    } catch (e) {
+      console.warn("Web Audio API was blocked or is unsupported in this browser environment:", e);
+      this.ctx = null;
     }
   }
 
@@ -51,23 +56,27 @@ class AudioEngine {
     this.muted = !this.muted;
     const toggleEl = document.getElementById('sound-toggle');
     if (this.muted) {
-      toggleEl.classList.add('muted');
-      toggleEl.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <line x1="23" y1="9" x2="17" y2="15"></line>
-          <line x1="17" y1="9" x2="23" y2="15"></line>
-        </svg>
-      `;
+      if (toggleEl) {
+        toggleEl.classList.add('muted');
+        toggleEl.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        `;
+      }
       this.pauseMusic();
     } else {
-      toggleEl.classList.remove('muted');
-      toggleEl.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-      `;
+      if (toggleEl) {
+        toggleEl.classList.remove('muted');
+        toggleEl.innerHTML = `
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        `;
+      }
       this.init();
       this.resumeMusic();
     }
@@ -83,6 +92,7 @@ class AudioEngine {
     this.musicEnabled = true;
     if (this.muted || this.musicPlaying) return;
     this.init();
+    if (!this.ctx) return;
 
     this.musicPlaying = true;
     this.nextNoteTime = this.ctx.currentTime;
@@ -113,6 +123,7 @@ class AudioEngine {
   resumeMusic() {
     if (this.musicEnabled && !this.muted && !this.musicPlaying) {
       this.init();
+      if (!this.ctx) return;
       this.musicPlaying = true;
       this.nextNoteTime = this.ctx.currentTime;
       this.schedulerTimer = setInterval(() => {
@@ -122,6 +133,7 @@ class AudioEngine {
   }
 
   scheduler() {
+    if (!this.ctx) return;
     while (this.nextNoteTime < this.ctx.currentTime + this.scheduleAheadTime) {
       this.scheduleNote(this.currentNoteIndex, this.nextNoteTime);
       this.nextNote();
@@ -135,6 +147,7 @@ class AudioEngine {
   }
 
   scheduleNote(stepNumber, time) {
+    if (!this.ctx) return;
     const melodyNote = this.melodyPattern[stepNumber % this.melodyPattern.length];
     const bassNote = this.bassPattern[stepNumber % this.bassPattern.length];
     const stepDuration = 60.0 / this.tempo / 4;
@@ -179,6 +192,7 @@ class AudioEngine {
     if (this.muted) return;
     this.init();
     const ctx = this.ctx;
+    if (!ctx) return;
     
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -228,6 +242,7 @@ class AudioEngine {
     if (this.muted) return;
     this.init();
     const ctx = this.ctx;
+    if (!ctx) return;
     
     // Classic NES "Too Bad" game over tone progression
     const notes = [493.88, 523.25, 587.33, 392.00, 349.23, 293.66, 196.00]; // B4, C5, D5, G4, F4, D4, G3
@@ -259,6 +274,7 @@ class AudioEngine {
     if (this.muted) return;
     this.init();
     const ctx = this.ctx;
+    if (!ctx) return;
     
     // Coin chime: B5 (987.77 Hz) for 0.06s, then E6 (1318.51 Hz) for 0.3s
     const osc = ctx.createOscillator();
@@ -283,6 +299,7 @@ class AudioEngine {
     if (this.muted) return;
     this.init();
     const ctx = this.ctx;
+    if (!ctx) return;
     
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -306,6 +323,7 @@ class AudioEngine {
     if (this.muted) return;
     this.init();
     const ctx = this.ctx;
+    if (!ctx) return;
     
     const notes = [783.99, 1046.50, 1318.51, 1567.98]; // G5, C6, E6, G6
     const duration = 0.06;
@@ -334,6 +352,7 @@ class AudioEngine {
     if (this.muted) return;
     this.init();
     const ctx = this.ctx;
+    if (!ctx) return;
     
     const bufferSize = ctx.sampleRate * 0.18;
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
@@ -365,6 +384,7 @@ class AudioEngine {
     if (this.muted) return;
     this.init();
     const ctx = this.ctx;
+    if (!ctx) return;
     
     const melody = [
       { f: 523.25, d: 0.08 }, // C5
