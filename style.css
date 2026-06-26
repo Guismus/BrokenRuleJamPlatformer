@@ -50,6 +50,8 @@ body {
   overflow: hidden;
   border: 6px solid #000000;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6);
+  will-change: transform;
+  transform-origin: center center;
 }
 
 /* Canvas styling */

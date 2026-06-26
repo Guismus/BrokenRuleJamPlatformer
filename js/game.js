@@ -73,6 +73,7 @@ class Game {
     
     this.initEventListeners();
     this.setupMenus();
+    this.resizeGame();
   }
 
   initEventListeners() {
@@ -105,6 +106,27 @@ class Game {
     document.getElementById('sound-toggle').addEventListener('click', () => {
       audio.toggleMute();
     });
+
+    window.addEventListener('resize', () => {
+      this.resizeGame();
+    });
+  }
+
+  resizeGame() {
+    const wrapper = document.getElementById('game-wrapper');
+    if (!wrapper) return;
+    
+    const targetWidth = 912; // 900 + 12px border
+    const targetHeight = 612; // 600 + 12px border
+    
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    const scaleX = windowWidth / targetWidth;
+    const scaleY = windowHeight / targetHeight;
+    const scale = Math.min(scaleX, scaleY);
+    
+    wrapper.style.transform = `scale(${scale})`;
   }
 
   setupMenus() {
